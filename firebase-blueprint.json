@@ -1,0 +1,121 @@
+{
+  "entities": {
+    "Member": {
+      "title": "Member",
+      "description": "Membro da Igreja do Nazareno em Maputo",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Nome completo do membro",
+          "maxLength": 150
+        },
+        "dateOfBirth": {
+          "type": "string",
+          "description": "Data de nascimento (YYYY-MM-DD)",
+          "maxLength": 30
+        },
+        "phoneNumber": {
+          "type": "string",
+          "description": "Número de telefone do membro",
+          "maxLength": 30
+        },
+        "isBaptized": {
+          "type": "boolean",
+          "description": "Indica se já foi batizado"
+        },
+        "isTransferred": {
+          "type": "boolean",
+          "description": "Indica se foi transferido de outra congregação"
+        },
+        "createdAt": {
+          "type": "number",
+          "description": "Timestamp de criação"
+        }
+      },
+      "required": ["name", "createdAt"]
+    },
+    "FinanceRecord": {
+      "title": "FinanceRecord",
+      "description": "Registo de dízimo ou oferta por culto",
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["tithe", "offering"],
+          "description": "Tipo de contribuição"
+        },
+        "amount": {
+          "type": "number",
+          "description": "Valor em Meticais (MT)"
+        },
+        "serviceDate": {
+          "type": "string",
+          "description": "Data do culto (YYYY-MM-DD)",
+          "maxLength": 30
+        },
+        "serviceNumber": {
+          "type": "string",
+          "description": "Culto correspondente (ex: 1º Culto, 2º Culto)",
+          "maxLength": 50
+        },
+        "memberId": {
+          "type": "string",
+          "description": "ID do membro caso seja dízimo",
+          "maxLength": 100
+        },
+        "createdAt": {
+          "type": "number",
+          "description": "Timestamp de registo"
+        }
+      },
+      "required": ["type", "amount", "serviceDate", "createdAt"]
+    },
+    "Visit": {
+      "title": "Visit",
+      "description": "Agendamento de visita pastoral",
+      "type": "object",
+      "properties": {
+        "memberId": {
+          "type": "string",
+          "description": "ID do membro a visitar",
+          "maxLength": 100
+        },
+        "visitDate": {
+          "type": "string",
+          "description": "Data prevista para a visita (YYYY-MM-DD)",
+          "maxLength": 30
+        },
+        "status": {
+          "type": "string",
+          "enum": ["scheduled", "completed"],
+          "description": "Estado da visita"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Observações pastorais",
+          "maxLength": 1000
+        },
+        "createdAt": {
+          "type": "number",
+          "description": "Timestamp de agendamento"
+        }
+      },
+      "required": ["memberId", "visitDate", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/members/{memberId}": {
+      "schema": "Member",
+      "description": "Coleção de membros registados"
+    },
+    "/finances/{financeId}": {
+      "schema": "FinanceRecord",
+      "description": "Coleção de contribuições financeiras"
+    },
+    "/visits/{visitId}": {
+      "schema": "Visit",
+      "description": "Coleção de visitas pastorais agendadas"
+    }
+  }
+}
