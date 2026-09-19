@@ -2,7 +2,7 @@ import type {Metadata} from 'next';
 import './globals.css'; // Global styles
 
 export const metadata: Metadata = {
-  title: 'Gestão Igreja do Nazareno',
+  title: 'Igreja do Nazareno',
   description: 'Sistema de gestão de crentes, finanças e visitas pastorais para a Igreja do Nazareno em Maputo.',
   openGraph: {
     title: 'Gestão Igreja do Nazareno',

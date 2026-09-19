@@ -89,22 +89,31 @@ export default function VisitsTab() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h2 className="text-2xl font-bold text-gray-800">Visitas Pastorais</h2>
+        <div>
+          <div className="flex items-center gap-2">
+            <h2 className="text-2xl font-bold text-[#0e1613]">Visitas Pastorais</h2>
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold border border-emerald-200">
+              {visits.length} registadas
+            </span>
+          </div>
+          <p className="text-sm text-[#61776b] mt-0.5">Agendamento e acompanhamento de visitas aos crentes e famílias</p>
+        </div>
+
         <button 
           onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors font-medium"
+          className="flex items-center gap-2 bg-[#0e1613] hover:bg-[#1a2821] text-white px-4 py-2.5 rounded-xl transition-all font-semibold text-xs shadow-sm hover:shadow-emerald-950/20"
         >
-          <Plus className="w-5 h-5" />
+          <Plus className="w-4 h-4 text-emerald-400" />
           Agendar Visita
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {visits.length === 0 ? (
-          <div className="col-span-full py-12 text-center bg-white rounded-xl border border-gray-100 shadow-sm text-gray-500">
-            Nenhuma visita agendada.
+          <div className="col-span-full py-12 text-center bg-white rounded-2xl border border-[#e2eae5] shadow-sm text-xs text-[#61776b]">
+            Nenhuma visita pastoral agendada até ao momento.
           </div>
         ) : (
           visits.map((visit) => {
@@ -112,45 +121,47 @@ export default function VisitsTab() {
             const isCompleted = visit.status === 'completed';
             
             return (
-              <div key={visit.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
-                <div className={`p-4 border-b ${isCompleted ? 'bg-gray-50' : 'bg-white'}`}>
+              <div key={visit.id} className="bg-white rounded-2xl shadow-sm border border-[#e2eae5] overflow-hidden flex flex-col justify-between hover:border-[#cfe0d5] transition-all">
+                <div className={`p-5 border-b border-[#f0f5f2] ${isCompleted ? 'bg-[#fbfdfc]' : 'bg-white'}`}>
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-bold text-gray-900 truncate pr-2">
+                    <h3 className="font-bold text-[#0e1613] text-sm truncate pr-2">
                       {member?.name || 'Membro não encontrado'}
                     </h3>
-                    <span className={`px-2 py-1 text-xs rounded-md font-medium flex-shrink-0 ${
-                      isCompleted ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+                    <span className={`px-2 py-0.5 text-[11px] rounded-md font-semibold flex-shrink-0 ${
+                      isCompleted 
+                        ? 'bg-[#e3f4e9] text-[#0d6b38] border border-[#c6e9d2]' 
+                        : 'bg-[#fef3e2] text-[#9a4e0a] border border-[#fde4be]'
                     }`}>
                       {isCompleted ? 'Realizada' : 'Agendada'}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-500 mt-2">
-                    <CalendarIcon className="w-4 h-4" />
-                    {new Date(visit.visitDate).toLocaleDateString('pt-BR')}
+                  <div className="flex items-center gap-1.5 text-xs text-[#5f786b] mt-2">
+                    <CalendarIcon className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>{new Date(visit.visitDate).toLocaleDateString('pt-BR')}</span>
                   </div>
                 </div>
                 
-                <div className="p-4 flex-1 text-sm text-gray-600">
+                <div className="p-5 flex-1 text-xs text-[#4b6355] leading-relaxed">
                   {visit.notes ? (
                     <p className="line-clamp-3">{visit.notes}</p>
                   ) : (
-                    <p className="italic text-gray-400">Sem observações.</p>
+                    <p className="italic text-[#91a89c]">Sem observações adicionais.</p>
                   )}
                 </div>
 
-                <div className="p-4 border-t border-gray-50 bg-gray-50 flex justify-between items-center mt-auto">
+                <div className="p-4 border-t border-[#f0f5f2] bg-[#fbfdfc] flex justify-between items-center mt-auto">
                   <button 
                     onClick={() => toggleStatus(visit)}
-                    className={`flex items-center gap-2 text-sm font-medium transition-colors ${
-                      isCompleted ? 'text-gray-500 hover:text-gray-700' : 'text-green-600 hover:text-green-700'
+                    className={`flex items-center gap-1.5 text-xs font-semibold transition-colors ${
+                      isCompleted ? 'text-[#61776b] hover:text-[#0e1613]' : 'text-emerald-700 hover:text-emerald-800'
                     }`}
                   >
-                    {isCompleted ? <Clock className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
+                    {isCompleted ? <Clock className="w-3.5 h-3.5" /> : <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />}
                     {isCompleted ? 'Marcar Pendente' : 'Marcar Realizada'}
                   </button>
                   <button 
                     onClick={() => handleDelete(visit.id)}
-                    className="text-red-500 hover:text-red-700 p-2 rounded-md hover:bg-red-50 transition-colors"
+                    className="text-[#9dafa5] hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition-colors"
                     title="Remover Visita"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -163,19 +174,20 @@ export default function VisitsTab() {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
-            <div className="p-6 border-b border-gray-100">
-              <h3 className="text-xl font-bold text-gray-800">Agendar Visita Pastoral</h3>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-[#e2eae5]">
+            <div className="p-6 border-b border-[#eaf1ec] bg-[#fbfdfc]">
+              <h3 className="text-lg font-bold text-[#0e1613]">Agendar Visita Pastoral</h3>
+              <p className="text-xs text-[#61776b]">Marque uma visita para aconselhamento, oração ou apoio pastoral</p>
             </div>
-            <form onSubmit={handleAddVisit} className="p-6 space-y-4">
+            <form onSubmit={handleAddVisit} className="p-6 space-y-4 text-xs">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Membro a Visitar</label>
+                <label className="block text-xs font-semibold text-[#3d5246] mb-1.5">Membro a Visitar</label>
                 <select 
                   required
                   value={newVisit.memberId}
                   onChange={(e) => setNewVisit({...newVisit, memberId: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-3.5 py-2.5 bg-white border border-[#dce6df] rounded-xl text-xs text-[#0e1613] focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500"
                 >
                   <option value="">Selecione o membro...</option>
                   {members.map(m => (
@@ -185,40 +197,40 @@ export default function VisitsTab() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Data da Visita</label>
+                <label className="block text-xs font-semibold text-[#3d5246] mb-1.5">Data da Visita</label>
                 <input 
                   type="date" 
                   required
                   value={newVisit.visitDate}
                   onChange={(e) => setNewVisit({...newVisit, visitDate: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-3.5 py-2.5 bg-white border border-[#dce6df] rounded-xl text-xs text-[#0e1613] focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Observações (Opcional)</label>
+                <label className="block text-xs font-semibold text-[#3d5246] mb-1.5">Observações (Opcional)</label>
                 <textarea 
                   rows={3}
                   value={newVisit.notes}
                   onChange={(e) => setNewVisit({...newVisit, notes: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+                  className="w-full px-3.5 py-2.5 bg-white border border-[#dce6df] rounded-xl text-xs text-[#0e1613] focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 resize-none"
                   placeholder="Motivo da visita, assuntos a abordar..."
                 />
               </div>
 
-              <div className="pt-4 flex gap-3 justify-end">
+              <div className="pt-4 flex gap-3 justify-end border-t border-[#f0f5f2]">
                 <button 
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 text-gray-600 font-medium hover:bg-gray-100 rounded-lg transition-colors"
+                  className="px-4 py-2 text-xs text-[#61776b] font-semibold hover:bg-[#edf4ef] rounded-xl transition-colors"
                 >
                   Cancelar
                 </button>
                 <button 
                   type="submit"
-                  className="px-4 py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors"
+                  className="px-4 py-2 bg-emerald-600 text-white font-semibold text-xs rounded-xl hover:bg-emerald-500 transition-colors shadow-sm"
                 >
-                  Agendar
+                  Agendar Visita
                 </button>
               </div>
             </form>
