@@ -11,18 +11,37 @@ import {
   Church,
   Sparkles,
   Search,
-  ChevronDown
+  ChevronDown,
+  LogOut
 } from 'lucide-react';
 import MembersTab from '@/components/MembersTab';
 import dynamic from 'next/dynamic';
 const FinancesTab = dynamic(() => import('@/components/FinancesTab'), { ssr: false });
 import VisitsTab from '@/components/VisitsTab';
 import DashboardTab from '@/components/DashboardTab';
+import LoginPage from '@/components/LoginPage';
+import { useAuth } from '@/lib/AuthContext';
 
 export default function Home() {
+  const { user, loading, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Se estiver a carregar o estado da sessão no Firebase
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0a0f0d] flex flex-col items-center justify-center text-white">
+        <div className="w-10 h-10 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4" />
+        <p className="text-xs text-[#789384] font-medium tracking-wide">A carregar autenticação...</p>
+      </div>
+    );
+  }
+
+  // Se não estiver autenticado como o usuário único permitido, apresenta apenas a página de Login
+  if (!user) {
+    return <LoginPage />;
+  }
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3, badge: null },
@@ -138,19 +157,28 @@ export default function Home() {
           </div>
         </nav>
 
-        {/* User Account / Footer in Sidebar */}
+        {/* User Account / Footer in Sidebar with Logout */}
         <div className="p-3.5 border-t border-[#182620] bg-[#0b120f]">
-          <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/[0.03] transition-colors">
-            <div className="relative">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white font-bold text-xs shadow-sm">
-                IN
+          <div className="flex items-center justify-between p-2 rounded-xl bg-[#121c17] border border-[#1a2922]">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="relative">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white font-bold text-xs shadow-sm">
+                  IN
+                </div>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 border-2 border-[#0b120f] absolute bottom-0 right-0"></span>
               </div>
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#0b120f] absolute bottom-0 right-0"></span>
+              <div className="min-w-0 text-left">
+                <p className="text-xs font-bold text-white truncate leading-tight">Pastor Responsável</p>
+                <p className="text-[10px] text-emerald-400/90 font-mono truncate">{user.email}</p>
+              </div>
             </div>
-            <div className="flex-1 min-w-0 text-left">
-              <p className="text-xs font-bold text-white truncate leading-tight">Pastor Responsável</p>
-              <p className="text-[11px] text-[#6d8478] truncate">#sede-maputo</p>
-            </div>
+            <button
+              onClick={() => logout()}
+              title="Terminar Sessão"
+              className="p-1.5 text-[#738a7e] hover:text-rose-400 hover:bg-rose-950/30 rounded-lg transition-colors cursor-pointer"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </aside>
@@ -163,16 +191,26 @@ export default function Home() {
           </div>
           <div>
             <h1 className="font-bold text-sm leading-tight">Igreja do Nazareno</h1>
-            <p className="text-[10px] text-emerald-400">Maputo</p>
+            <p className="text-[10px] text-emerald-400">{user.email}</p>
           </div>
         </div>
-        <button 
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="p-2 -mr-2 text-[#9bb0a5] hover:text-white"
-        >
-          {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => logout()}
+            title="Terminar Sessão"
+            className="p-2 text-[#9bb0a5] hover:text-rose-400"
+          >
+            <LogOut className="w-5 h-5" />
+          </button>
+          <button 
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="p-2 text-[#9bb0a5] hover:text-white"
+          >
+            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
       </div>
+
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
