@@ -18,6 +18,7 @@ import {
   doc, 
   updateDoc, 
   addDoc,
+  deleteDoc,
   onSnapshot
 } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
@@ -31,13 +32,27 @@ interface UpdateProfilePayload {
   photoURL?: string;
 }
 
+export interface CreateUserPayload {
+  name: string;
+  email: string;
+  password: string;
+  role: 'admin' | 'usuario';
+  phoneNumber?: string;
+}
+
 interface AuthContextType {
   user: User | null;
   systemUser: SystemUser | null;
+  isAdmin: boolean;
   loading: boolean;
   login: (email: string, pass: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUserProfile: (payload: UpdateProfilePayload) => Promise<void>;
+  createNewUser: (payload: CreateUserPayload) => Promise<string>;
+  deleteSystemUser: (userId: string) => Promise<void>;
+  changeUserRole: (userId: string, newRole: 'admin' | 'usuario') => Promise<void>;
+  toggleUserActiveStatus: (userId: string, active: boolean) => Promise<void>;
+  resetUserPassword: (userId: string, newPass: string) => Promise<void>;
   error: string | null;
   clearError: () => void;
 }
@@ -45,10 +60,16 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   systemUser: null,
+  isAdmin: false,
   loading: true,
   login: async () => {},
   logout: async () => {},
   updateUserProfile: async () => {},
+  createNewUser: async () => '',
+  deleteSystemUser: async () => {},
+  changeUserRole: async () => {},
+  toggleUserActiveStatus: async () => {},
+  resetUserPassword: async () => {},
   error: null,
   clearError: () => {}
 });
@@ -83,6 +104,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [systemUser, setSystemUser] = useState<SystemUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const isAdmin = systemUser?.role === 'admin';
 
   // Assegura que o utilizador luciano.luis@igreja existe na base de dados Firestore
   const ensureDefaultUserInDatabase = async () => {
@@ -303,7 +326,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Função para editar perfil do administrador
+  // Função para editar perfil do utilizador logado
   // Grava todas as alterações directamente na base de dados Firestore
   const updateUserProfile = async (payload: UpdateProfilePayload) => {
     if (!systemUser) {
@@ -351,16 +374,130 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setSystemUser(prev => prev ? ({ ...prev, ...updates }) : null);
   };
 
+  // 4. CRIAR NOVO UTILIZADOR NA BASE DE DADOS (Privilégio exclusivo de Administrador)
+  const createNewUser = async (payload: CreateUserPayload): Promise<string> => {
+    if (!isAdmin) {
+      throw new Error('Apenas utilizadores com perfil de Administrador podem criar novos utilizadores.');
+    }
+
+    const cleanEmail = payload.email.trim().toLowerCase();
+    const cleanPassword = payload.password.trim();
+    const cleanName = payload.name.trim();
+
+    if (!cleanName) throw new Error('O nome do utilizador é obrigatório.');
+    if (!cleanEmail) throw new Error('O e-mail é obrigatório.');
+    if (!cleanPassword || cleanPassword.length < 6) {
+      throw new Error('A palavra-passe deve ter pelo menos 6 caracteres.');
+    }
+
+    // Valida se o email já existe na base de dados
+    const usersRef = collection(db, 'system_users');
+    const authVariant = toFirebaseAuthEmail(cleanEmail);
+    const q = query(usersRef, where('email', 'in', [cleanEmail, authVariant]));
+    const snap = await getDocs(q);
+
+    if (!snap.empty) {
+      throw new Error(`Já existe um utilizador registado na base de dados com o e-mail "${cleanEmail}".`);
+    }
+
+    const allUsersSnap = await getDocs(usersRef);
+    const exists = allUsersSnap.docs.some(d => {
+      const e = (d.data().email || '').toLowerCase().trim();
+      return e === cleanEmail || e === authVariant;
+    });
+
+    if (exists) {
+      throw new Error(`Já existe um utilizador registado na base de dados com o e-mail "${cleanEmail}".`);
+    }
+
+    const newUserDoc: Omit<SystemUser, 'id'> = {
+      name: cleanName,
+      email: cleanEmail,
+      role: payload.role, // 'admin' ou 'usuario'
+      active: true,
+      phoneNumber: payload.phoneNumber?.trim() || '',
+      photoURL: '',
+      password: cleanPassword,
+      createdAt: Date.now()
+    };
+
+    const docRef = await addDoc(usersRef, newUserDoc);
+    return docRef.id;
+  };
+
+  // 5. ELIMINAR UTILIZADOR DA BASE DE DADOS
+  const deleteSystemUser = async (userId: string) => {
+    if (!isAdmin) {
+      throw new Error('Apenas administradores podem eliminar utilizadores.');
+    }
+    if (systemUser?.id === userId) {
+      throw new Error('Não é permitido eliminar a sua própria conta enquanto estiver com a sessão iniciada.');
+    }
+
+    await deleteDoc(doc(db, 'system_users', userId));
+  };
+
+  // 6. ALTERAR PAPEL (ADMIN vs USUÁRIO NORMAL)
+  const changeUserRole = async (userId: string, newRole: 'admin' | 'usuario') => {
+    if (!isAdmin) {
+      throw new Error('Apenas administradores podem alterar o nível de privilégios de outros utilizadores.');
+    }
+    if (systemUser?.id === userId && newRole !== 'admin') {
+      throw new Error('Não pode remover os seus próprios privilégios de administrador.');
+    }
+
+    await updateDoc(doc(db, 'system_users', userId), {
+      role: newRole,
+      updatedAt: Date.now()
+    });
+  };
+
+  // 7. ATIVAR / DESATIVAR UTILIZADOR
+  const toggleUserActiveStatus = async (userId: string, active: boolean) => {
+    if (!isAdmin) {
+      throw new Error('Apenas administradores podem ativar ou desativar contas.');
+    }
+    if (systemUser?.id === userId && !active) {
+      throw new Error('Não pode desativar a sua própria conta de administrador.');
+    }
+
+    await updateDoc(doc(db, 'system_users', userId), {
+      active,
+      updatedAt: Date.now()
+    });
+  };
+
+  // 8. REDEFINIR PALAVRA-PASSE DE QUALQUER UTILIZADOR
+  const resetUserPassword = async (userId: string, newPass: string) => {
+    if (!isAdmin) {
+      throw new Error('Apenas administradores podem redefinir palavras-passe.');
+    }
+    if (!newPass || newPass.trim().length < 6) {
+      throw new Error('A palavra-passe deve ter pelo menos 6 caracteres.');
+    }
+
+    await updateDoc(doc(db, 'system_users', userId), {
+      password: newPass.trim(),
+      updatedAt: Date.now()
+    });
+  };
+
   const clearError = () => setError(null);
 
   return (
     <AuthContext.Provider value={{ 
       user, 
       systemUser, 
+      isAdmin,
       loading, 
       login, 
       logout, 
       updateUserProfile,
+      createNewUser,
+      deleteSystemUser,
+      changeUserRole,
+      toggleUserActiveStatus,
+      resetUserPassword,
       error, 
       clearError
     }}>

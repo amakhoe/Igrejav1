@@ -25,8 +25,10 @@ import {
   Sparkles,
   CheckCircle2,
   XCircle,
-  FileText
+  FileText,
+  Lock
 } from 'lucide-react';
+import { useAuth } from '@/lib/AuthContext';
 
 const INITIAL_SAMPLE_WORKERS = [
   { name: 'Rev. Manuel Sitoe', role: 'pastor' as WorkerRole, subRole: 'Pastor Titular', phoneNumber: '+258 84 123 4567', email: 'rev.manuel@igrejanazareno.mz', active: true, notes: 'Ministério Pastoral e Doutrinário' },
@@ -48,6 +50,7 @@ function getDefaultSubRole(role: WorkerRole): string {
 }
 
 export default function WorkersTab() {
+  const { isAdmin } = useAuth();
   const [workers, setWorkers] = useState<ChurchWorker[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState<'all' | WorkerRole>('all');
@@ -118,6 +121,10 @@ export default function WorkersTab() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isAdmin) {
+      alert('Apenas administradores têm privilégios para registar ou editar servos.');
+      return;
+    }
     if (!formData.name.trim()) return;
 
     setSubmitting(true);
@@ -154,6 +161,10 @@ export default function WorkersTab() {
   };
 
   const handleToggleActive = async (worker: ChurchWorker) => {
+    if (!isAdmin) {
+      alert('Apenas administradores têm privilégios para alternar o estado do servo.');
+      return;
+    }
     try {
       await updateDoc(doc(db, 'workers', worker.id), {
         active: !worker.active
@@ -164,6 +175,10 @@ export default function WorkersTab() {
   };
 
   const handleDelete = async (id: string, name: string) => {
+    if (!isAdmin) {
+      alert('Apenas administradores têm permissão para eliminar servos.');
+      return;
+    }
     if (confirm(`Tem certeza que deseja remover o servo "${name}"?`)) {
       try {
         await deleteDoc(doc(db, 'workers', id));
@@ -174,6 +189,7 @@ export default function WorkersTab() {
   };
 
   const handlePopulateSampleWorkers = async () => {
+    if (!isAdmin) return;
     if (!confirm('Deseja carregar a equipa padrão de Pastores, Obreiros e Músicos?')) return;
     try {
       for (const w of INITIAL_SAMPLE_WORKERS) {
@@ -218,41 +234,48 @@ export default function WorkersTab() {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {workers.length === 0 && (
-            <button
-              onClick={handlePopulateSampleWorkers}
-              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-xl hover:bg-emerald-100 transition-colors shadow-sm"
-            >
-              <Sparkles className="w-4 h-4 text-emerald-600" />
-              Carregar Equipa de Exemplo
-            </button>
-          )}
+        {isAdmin ? (
+          <div className="flex flex-wrap items-center gap-2">
+            {workers.length === 0 && (
+              <button
+                onClick={handlePopulateSampleWorkers}
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-xl hover:bg-emerald-100 transition-colors shadow-sm cursor-pointer"
+              >
+                <Sparkles className="w-4 h-4 text-emerald-600" />
+                Carregar Equipa de Exemplo
+              </button>
+            )}
 
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={() => handleOpenAdd('pastor')}
-              className="inline-flex items-center gap-1 px-3 py-2 text-xs font-semibold text-emerald-900 bg-emerald-100/80 hover:bg-emerald-200/80 border border-emerald-300/60 rounded-xl transition-colors"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              + Pastor
-            </button>
-            <button
-              onClick={() => handleOpenAdd('obreiro')}
-              className="inline-flex items-center gap-1 px-3 py-2 text-xs font-semibold text-blue-900 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl transition-colors"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              + Obreiro
-            </button>
-            <button
-              onClick={() => handleOpenAdd('musico')}
-              className="inline-flex items-center gap-1 px-3 py-2 text-xs font-semibold text-purple-900 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-xl transition-colors"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              + Músico / Cantor
-            </button>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => handleOpenAdd('pastor')}
+                className="inline-flex items-center gap-1 px-3 py-2 text-xs font-semibold text-emerald-900 bg-emerald-100/80 hover:bg-emerald-200/80 border border-emerald-300/60 rounded-xl transition-colors cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                + Pastor
+              </button>
+              <button
+                onClick={() => handleOpenAdd('obreiro')}
+                className="inline-flex items-center gap-1 px-3 py-2 text-xs font-semibold text-blue-900 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl transition-colors cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                + Obreiro
+              </button>
+              <button
+                onClick={() => handleOpenAdd('musico')}
+                className="inline-flex items-center gap-1 px-3 py-2 text-xs font-semibold text-purple-900 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-xl transition-colors cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                + Músico / Cantor
+              </button>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-zinc-100 border border-zinc-200 text-zinc-600 text-xs font-medium">
+            <Lock className="w-3.5 h-3.5 text-zinc-400" />
+            <span>Modo de Consulta (Sem privilégios de registo)</span>
+          </div>
+        )}
       </div>
 
       {/* Summary KPI Cards */}
@@ -477,27 +500,35 @@ export default function WorkersTab() {
                       {isPastor ? 'Pastor' : isObreiro ? 'Obreiro' : 'Músico / Cantor'}
                     </span>
 
-                    <button
-                      onClick={() => handleToggleActive(worker)}
-                      title={worker.active ? 'Clique para marcar como inactivo' : 'Clique para marcar como activo'}
-                      className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full transition-colors ${
-                        worker.active 
-                          ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' 
-                          : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                      }`}
-                    >
-                      {worker.active ? (
-                        <>
-                          <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                          <span>Activo</span>
-                        </>
-                      ) : (
-                        <>
-                          <XCircle className="w-3 h-3 text-gray-400" />
-                          <span>Inactivo</span>
-                        </>
-                      )}
-                    </button>
+                    {isAdmin ? (
+                      <button
+                        onClick={() => handleToggleActive(worker)}
+                        title={worker.active ? 'Clique para marcar como inactivo' : 'Clique para marcar como activo'}
+                        className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full transition-colors cursor-pointer ${
+                          worker.active 
+                            ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' 
+                            : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                        }`}
+                      >
+                        {worker.active ? (
+                          <>
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                            <span>Activo</span>
+                          </>
+                        ) : (
+                          <>
+                            <XCircle className="w-3 h-3 text-gray-400" />
+                            <span>Inactivo</span>
+                          </>
+                        )}
+                      </button>
+                    ) : (
+                      <span className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full ${
+                        worker.active ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'
+                      }`}>
+                        {worker.active ? 'Activo' : 'Inactivo'}
+                      </span>
+                    )}
                   </div>
 
                   {/* Worker Name & Specific Sub-Role */}
@@ -539,21 +570,25 @@ export default function WorkersTab() {
                     ID: {worker.id.slice(0, 6)}...
                   </span>
 
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => handleOpenEdit(worker)}
-                      className="px-2.5 py-1 text-xs font-semibold text-[#3b5044] hover:bg-[#edf2ee] rounded-lg transition-colors"
-                    >
-                      Editar
-                    </button>
-                    <button
-                      onClick={() => handleDelete(worker.id, worker.name)}
-                      className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Remover servo"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                  {isAdmin ? (
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => handleOpenEdit(worker)}
+                        className="px-2.5 py-1 text-xs font-semibold text-[#3b5044] hover:bg-[#edf2ee] rounded-lg transition-colors cursor-pointer"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        onClick={() => handleDelete(worker.id, worker.name)}
+                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                        title="Remover servo"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <span className="text-[11px] text-zinc-400 italic">Consulta</span>
+                  )}
                 </div>
               </div>
             );

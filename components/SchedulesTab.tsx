@@ -24,8 +24,10 @@ import {
   Check, 
   Sparkles,
   BookOpen,
-  CalendarCheck
+  CalendarCheck,
+  Lock
 } from 'lucide-react';
+import { useAuth } from '@/lib/AuthContext';
 
 function getInitialNextSunday(): string {
   const today = new Date();
@@ -37,6 +39,7 @@ function getInitialNextSunday(): string {
 }
 
 export default function SchedulesTab() {
+  const { isAdmin } = useAuth();
   const [schedules, setSchedules] = useState<WorkSchedule[]>([]);
   const [workers, setWorkers] = useState<ChurchWorker[]>([]);
   const [showModal, setShowModal] = useState(false);
@@ -133,6 +136,10 @@ export default function SchedulesTab() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isAdmin) {
+      alert('Apenas administradores têm privilégios para criar ou editar escalas.');
+      return;
+    }
     if (!date) return;
 
     setSubmitting(true);
@@ -166,6 +173,10 @@ export default function SchedulesTab() {
   };
 
   const handleDelete = async (id: string, serviceTitle: string) => {
+    if (!isAdmin) {
+      alert('Apenas administradores têm privilégios para eliminar escalas de trabalho.');
+      return;
+    }
     if (confirm(`Tem certeza que deseja remover a escala "${serviceTitle}"?`)) {
       try {
         await deleteDoc(doc(db, 'schedules', id));
@@ -257,10 +268,10 @@ _Que o Senhor abençoe a todos os servos no seu ministério!_`;
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          {schedules.length === 0 && (
+          {isAdmin && schedules.length === 0 && (
             <button
               onClick={handleCreateSampleSchedule}
-              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-xl hover:bg-emerald-100 transition-colors shadow-sm"
+              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-xl hover:bg-emerald-100 transition-colors shadow-sm cursor-pointer"
             >
               <Sparkles className="w-4 h-4 text-emerald-600" />
               Criar Escala Modelo
@@ -269,19 +280,26 @@ _Que o Senhor abençoe a todos os servos no seu ministério!_`;
 
           <button
             onClick={handlePrint}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-[#3b5044] bg-white border border-[#d6e2db] rounded-xl hover:bg-[#f6f9f7] transition-colors shadow-sm"
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-[#3b5044] bg-white border border-[#d6e2db] rounded-xl hover:bg-[#f6f9f7] transition-colors shadow-sm cursor-pointer"
           >
             <Printer className="w-4 h-4" />
             Imprimir
           </button>
 
-          <button
-            onClick={handleOpenAdd}
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 rounded-xl transition-colors shadow-sm"
-          >
-            <Plus className="w-4 h-4" />
-            Nova Escala de Culto
-          </button>
+          {isAdmin ? (
+            <button
+              onClick={handleOpenAdd}
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 rounded-xl transition-colors shadow-sm cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              Nova Escala de Culto
+            </button>
+          ) : (
+            <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-zinc-100 border border-zinc-200 text-zinc-600 text-xs font-medium">
+              <Lock className="w-3.5 h-3.5 text-zinc-400" />
+              <span>Modo de Consulta</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -376,20 +394,24 @@ _Que o Senhor abençoe a todos os servos no seu ministério!_`;
                       )}
                     </button>
 
-                    <button
-                      onClick={() => handleOpenEdit(sched)}
-                      className="px-3 py-1.5 text-xs font-semibold bg-white/10 hover:bg-white/20 text-white rounded-xl transition-colors"
-                    >
-                      Editar
-                    </button>
+                    {isAdmin && (
+                      <>
+                        <button
+                          onClick={() => handleOpenEdit(sched)}
+                          className="px-3 py-1.5 text-xs font-semibold bg-white/10 hover:bg-white/20 text-white rounded-xl transition-colors cursor-pointer"
+                        >
+                          Editar
+                        </button>
 
-                    <button
-                      onClick={() => handleDelete(sched.id, sched.serviceName)}
-                      className="p-2 text-red-300 hover:bg-red-500/20 rounded-xl transition-colors"
-                      title="Remover escala"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                        <button
+                          onClick={() => handleDelete(sched.id, sched.serviceName)}
+                          className="p-2 text-red-300 hover:bg-red-500/20 rounded-xl transition-colors cursor-pointer"
+                          title="Remover escala"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
 

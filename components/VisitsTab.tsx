@@ -4,9 +4,11 @@ import React, { useEffect, useState } from 'react';
 import { collection, query, onSnapshot, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Visit, Member } from '@/lib/types';
-import { Calendar as CalendarIcon, Plus, Trash2, CheckCircle, Clock } from 'lucide-react';
+import { Calendar as CalendarIcon, Plus, Trash2, CheckCircle, Clock, Lock } from 'lucide-react';
+import { useAuth } from '@/lib/AuthContext';
 
 export default function VisitsTab() {
+  const { isAdmin } = useAuth();
   const [visits, setVisits] = useState<Visit[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [showModal, setShowModal] = useState(false);
@@ -49,6 +51,10 @@ export default function VisitsTab() {
 
   const handleAddVisit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isAdmin) {
+      alert('Apenas administradores têm privilégios para agendar visitas.');
+      return;
+    }
     if (!newVisit.memberId || !newVisit.visitDate) return;
     
     try {
@@ -70,6 +76,10 @@ export default function VisitsTab() {
   };
 
   const toggleStatus = async (visit: Visit) => {
+    if (!isAdmin) {
+      alert('Apenas administradores têm privilégios para atualizar o estado da visita.');
+      return;
+    }
     const newStatus = visit.status === 'scheduled' ? 'completed' : 'scheduled';
     try {
       await updateDoc(doc(db, 'visits', visit.id), { status: newStatus });
@@ -79,6 +89,10 @@ export default function VisitsTab() {
   };
 
   const handleDelete = async (id: string) => {
+    if (!isAdmin) {
+      alert('Apenas administradores têm permissão para remover visitas.');
+      return;
+    }
     if (confirm('Tem certeza que deseja remover este agendamento?')) {
       try {
         await deleteDoc(doc(db, 'visits', id));
@@ -101,13 +115,20 @@ export default function VisitsTab() {
           <p className="text-sm text-[#61776b] mt-0.5">Agendamento e acompanhamento de visitas aos crentes e famílias</p>
         </div>
 
-        <button 
-          onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 bg-[#0e1613] hover:bg-[#1a2821] text-white px-4 py-2.5 rounded-xl transition-all font-semibold text-xs shadow-sm hover:shadow-emerald-950/20"
-        >
-          <Plus className="w-4 h-4 text-emerald-400" />
-          Agendar Visita
-        </button>
+        {isAdmin ? (
+          <button 
+            onClick={() => setShowModal(true)}
+            className="flex items-center gap-2 bg-[#0e1613] hover:bg-[#1a2821] text-white px-4 py-2.5 rounded-xl transition-all font-semibold text-xs shadow-sm hover:shadow-emerald-950/20 cursor-pointer"
+          >
+            <Plus className="w-4 h-4 text-emerald-400" />
+            Agendar Visita
+          </button>
+        ) : (
+          <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-zinc-100 border border-zinc-200 text-zinc-600 text-xs font-medium">
+            <Lock className="w-3.5 h-3.5 text-zinc-400" />
+            <span>Modo de Consulta</span>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -150,22 +171,34 @@ export default function VisitsTab() {
                 </div>
 
                 <div className="p-4 border-t border-[#f0f5f2] bg-[#fbfdfc] flex justify-between items-center mt-auto">
-                  <button 
-                    onClick={() => toggleStatus(visit)}
-                    className={`flex items-center gap-1.5 text-xs font-semibold transition-colors ${
-                      isCompleted ? 'text-[#61776b] hover:text-[#0e1613]' : 'text-emerald-700 hover:text-emerald-800'
-                    }`}
-                  >
-                    {isCompleted ? <Clock className="w-3.5 h-3.5" /> : <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />}
-                    {isCompleted ? 'Marcar Pendente' : 'Marcar Realizada'}
-                  </button>
-                  <button 
-                    onClick={() => handleDelete(visit.id)}
-                    className="text-[#9dafa5] hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition-colors"
-                    title="Remover Visita"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {isAdmin ? (
+                    <>
+                      <button 
+                        onClick={() => toggleStatus(visit)}
+                        className={`flex items-center gap-1.5 text-xs font-semibold transition-colors cursor-pointer ${
+                          isCompleted ? 'text-[#61776b] hover:text-[#0e1613]' : 'text-emerald-700 hover:text-emerald-800'
+                        }`}
+                      >
+                        {isCompleted ? <Clock className="w-3.5 h-3.5" /> : <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />}
+                        {isCompleted ? 'Marcar Pendente' : 'Marcar Realizada'}
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(visit.id)}
+                        className="text-[#9dafa5] hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition-colors cursor-pointer"
+                        title="Remover Visita"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </>
+                  ) : (
+                    <div className="flex items-center justify-between w-full text-xs">
+                      <span className={`inline-flex items-center gap-1 font-semibold ${isCompleted ? 'text-emerald-700' : 'text-amber-700'}`}>
+                        {isCompleted ? <CheckCircle className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
+                        {isCompleted ? 'Realizada' : 'Pendente'}
+                      </span>
+                      <span className="text-[11px] text-zinc-400 italic">Consulta</span>
+                    </div>
+                  )}
                 </div>
               </div>
             );

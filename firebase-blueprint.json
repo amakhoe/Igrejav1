@@ -218,8 +218,8 @@
         },
         "role": {
           "type": "string",
-          "enum": ["pastor", "secretario", "tesoureiro", "admin"],
-          "description": "Papel litúrgico / administrativo"
+          "enum": ["admin", "usuario", "pastor", "secretario", "tesoureiro"],
+          "description": "Papel litúrgico / administrativo ou utilizador normal sem privilégios"
         },
         "active": {
           "type": "boolean",

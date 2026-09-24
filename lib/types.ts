@@ -58,7 +58,7 @@ export interface SystemUser {
   id: string;
   email: string;
   name: string;
-  role: 'pastor' | 'secretario' | 'tesoureiro' | 'admin';
+  role: 'admin' | 'usuario' | 'pastor' | 'secretario' | 'tesoureiro';
   active: boolean;
   phoneNumber?: string;
   photoURL?: string;

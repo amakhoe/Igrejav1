@@ -215,9 +215,11 @@ function ProfileFormContent({ user, onBackToDashboard, updateUserProfile }: Prof
             </span>
             <span className="text-xs text-[#61776b]">Base de Dados Firestore</span>
           </div>
-          <h1 className="text-2xl font-bold text-[#0e1613]">Editar Perfil do Administrador</h1>
+          <h1 className="text-2xl font-bold text-[#0e1613]">
+            {user.role === 'admin' ? 'Editar Perfil do Administrador' : 'Editar Perfil de Utilizador'}
+          </h1>
           <p className="text-xs text-[#61776b] mt-0.5">
-            As alterações gravadas aqui atualizam directamente o registo na base de dados da igreja.
+            As alterações gravadas aqui atualizam directamente o seu registo na base de dados da igreja.
           </p>
         </div>
 
@@ -404,12 +406,16 @@ function ProfileFormContent({ user, onBackToDashboard, updateUserProfile }: Prof
               {/* Cargo / Papel Litúrgico (Informativo) */}
               <div>
                 <label className="block text-xs font-bold text-[#2d3f35] mb-1.5">
-                  Função / Papel
+                  Nível de Acesso &amp; Privilégios
                 </label>
-                <div className="flex items-center gap-2 p-2.5 bg-[#f5f8f6] border border-[#d8e3dc] rounded-xl text-xs text-[#2c4035]">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                  <span className="font-bold uppercase tracking-wider text-[11px] text-emerald-800">
-                    {user.role || 'admin'} • Ativo na Base de Dados
+                <div className={`flex items-center gap-2 p-2.5 border rounded-xl text-xs ${
+                  user.role === 'admin'
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
+                    : 'bg-zinc-100 border-zinc-200 text-zinc-800'
+                }`}>
+                  <ShieldCheck className={`w-4 h-4 ${user.role === 'admin' ? 'text-emerald-600' : 'text-zinc-500'}`} />
+                  <span className="font-bold uppercase tracking-wider text-[11px]">
+                    {user.role === 'admin' ? 'Administrador • Acesso Total' : 'Utilizador Normal • Sem Privilégios'}
                   </span>
                 </div>
               </div>

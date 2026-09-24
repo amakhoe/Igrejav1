@@ -4,12 +4,12 @@ import React, { useEffect, useState } from 'react';
 import { collection, query, onSnapshot, addDoc, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { FinanceRecord, Member } from '@/lib/types';
-import { Plus, Trash2, FileDown, ChevronDown, ChevronUp, Printer } from 'lucide-react';
+import { Plus, Trash2, FileDown, ChevronDown, ChevronUp, Printer, Lock } from 'lucide-react';
 import MonthlyFinanceChart from '@/components/MonthlyFinanceChart';
-
-
+import { useAuth } from '@/lib/AuthContext';
 
 export default function FinancesTab() {
+  const { isAdmin } = useAuth();
   const [finances, setFinances] = useState<FinanceRecord[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [showModal, setShowModal] = useState(false);
@@ -55,6 +55,10 @@ export default function FinancesTab() {
 
   const handleAddRecord = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isAdmin) {
+      alert('Apenas administradores têm privilégios para efetuar lançamentos financeiros.');
+      return;
+    }
     if (!newRecord.amount || !newRecord.serviceDate || !newRecord.serviceNumber) return;
     
     try {
@@ -78,6 +82,10 @@ export default function FinancesTab() {
   };
 
   const handleDelete = async (id: string) => {
+    if (!isAdmin) {
+      alert('Apenas administradores têm permissão para eliminar lançamentos financeiros.');
+      return;
+    }
     if (confirm('Tem certeza que deseja remover este registo?')) {
       try {
         await deleteDoc(doc(db, 'finances', id));
@@ -170,37 +178,44 @@ export default function FinancesTab() {
           <p className="text-sm text-[#61776b] mt-0.5">Gestão e consolidação das contribuições da congregação</p>
         </div>
 
-        <div className="flex flex-wrap gap-2.5 print:hidden">
-          {finances.length === 0 && (
+        <div className="flex flex-wrap items-center gap-2.5 print:hidden">
+          {isAdmin && finances.length === 0 && (
             <button 
               onClick={handleSeedSampleFinances}
               disabled={seeding}
-              className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 px-3.5 py-2 rounded-xl hover:bg-emerald-100 transition-colors text-xs font-semibold shadow-xs disabled:opacity-50"
+              className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 px-3.5 py-2 rounded-xl hover:bg-emerald-100 transition-colors text-xs font-semibold shadow-xs disabled:opacity-50 cursor-pointer"
             >
               {seeding ? 'A carregar exemplos...' : 'Carregar Dados Exemplo'}
             </button>
           )}
           <button 
             onClick={() => window.print()}
-            className="flex items-center gap-1.5 bg-white border border-[#dce6df] text-[#1b2a22] px-3.5 py-2 rounded-xl hover:bg-[#edf4ef] transition-colors text-xs font-semibold shadow-sm"
+            className="flex items-center gap-1.5 bg-white border border-[#dce6df] text-[#1b2a22] px-3.5 py-2 rounded-xl hover:bg-[#edf4ef] transition-colors text-xs font-semibold shadow-sm cursor-pointer"
           >
             <Printer className="w-4 h-4 text-[#587365]" />
             Imprimir
           </button>
           <button 
             onClick={generatePDF}
-            className="flex items-center gap-1.5 bg-white border border-[#dce6df] text-[#1b2a22] px-3.5 py-2 rounded-xl hover:bg-[#edf4ef] transition-colors text-xs font-semibold shadow-sm"
+            className="flex items-center gap-1.5 bg-white border border-[#dce6df] text-[#1b2a22] px-3.5 py-2 rounded-xl hover:bg-[#edf4ef] transition-colors text-xs font-semibold shadow-sm cursor-pointer"
           >
             <FileDown className="w-4 h-4 text-[#587365]" />
             Exportar
           </button>
-          <button 
-            onClick={() => setShowModal(true)}
-            className="flex items-center gap-1.5 bg-[#0e1613] hover:bg-[#1a2821] text-white px-4 py-2 rounded-xl transition-all text-xs font-semibold shadow-sm hover:shadow-emerald-950/20"
-          >
-            <Plus className="w-4 h-4 text-emerald-400" />
-            Novo Registo
-          </button>
+          {isAdmin ? (
+            <button 
+              onClick={() => setShowModal(true)}
+              className="flex items-center gap-1.5 bg-[#0e1613] hover:bg-[#1a2821] text-white px-4 py-2 rounded-xl transition-all text-xs font-semibold shadow-sm hover:shadow-emerald-950/20 cursor-pointer"
+            >
+              <Plus className="w-4 h-4 text-emerald-400" />
+              Novo Registo
+            </button>
+          ) : (
+            <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-zinc-100 border border-zinc-200 text-zinc-600 text-xs font-medium">
+              <Lock className="w-3.5 h-3.5 text-zinc-400" />
+              <span>Modo de Consulta</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -279,16 +294,20 @@ export default function FinancesTab() {
                                 {record.amount.toFixed(2)} MT
                               </td>
                               <td className="py-2.5 text-right print:hidden">
-                                <button 
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDelete(record.id);
-                                  }}
-                                  className="text-[#9dafa5] hover:text-rose-600 p-1 rounded-md hover:bg-rose-50 transition-colors"
-                                  title="Remover Registo"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
+                                {isAdmin ? (
+                                  <button 
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDelete(record.id);
+                                    }}
+                                    className="text-[#9dafa5] hover:text-rose-600 p-1 rounded-md hover:bg-rose-50 transition-colors cursor-pointer"
+                                    title="Remover Registo"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                ) : (
+                                  <span className="text-[10px] text-zinc-400 italic">Consulta</span>
+                                )}
                               </td>
                             </tr>
                           );

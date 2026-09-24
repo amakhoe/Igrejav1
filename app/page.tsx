@@ -16,7 +16,9 @@ import {
   LogOut,
   CalendarDays,
   Users2,
-  UserCog
+  UserCog,
+  ShieldCheck,
+  UserCheck
 } from 'lucide-react';
 import MembersTab from '@/components/MembersTab';
 import dynamic from 'next/dynamic';
@@ -26,11 +28,12 @@ import DashboardTab from '@/components/DashboardTab';
 import WorkersTab from '@/components/WorkersTab';
 import SchedulesTab from '@/components/SchedulesTab';
 import ProfileTab from '@/components/ProfileTab';
+import UsersManagementTab from '@/components/UsersManagementTab';
 import LoginPage from '@/components/LoginPage';
 import { useAuth } from '@/lib/AuthContext';
 
 export default function Home() {
-  const { user, systemUser, loading, logout } = useAuth();
+  const { user, systemUser, isAdmin, loading, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -57,7 +60,8 @@ export default function Home() {
     { id: 'members', label: 'Membros', icon: Users, badge: null },
     { id: 'finances', label: 'Finanças', icon: Wallet, badge: null },
     { id: 'visits', label: 'Visitas Pastorais', icon: Calendar, badge: null },
-    { id: 'profile', label: 'Editar Perfil', icon: UserCog, badge: 'Admin' },
+    ...(isAdmin ? [{ id: 'users', label: 'Criar & Gerir Utilizadores', icon: ShieldCheck, badge: 'Admin' }] : []),
+    { id: 'profile', label: 'Editar Perfil', icon: UserCog, badge: isAdmin ? 'Admin' : 'Conta' },
   ];
 
   const renderContent = () => {
@@ -74,6 +78,8 @@ export default function Home() {
         return <FinancesTab />;
       case 'visits':
         return <VisitsTab />;
+      case 'users':
+        return <UsersManagementTab onNavigate={setActiveTab} />;
       case 'profile':
         return <ProfileTab key={systemUser?.id || systemUser?.email || 'profile'} onBackToDashboard={() => setActiveTab('dashboard')} />;
       default:
@@ -200,10 +206,14 @@ export default function Home() {
                   {systemUser?.name || 'Luciano Luís'}
                 </p>
                 <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 uppercase">
-                    {systemUser?.role || 'Admin'}
+                  <span className={`text-[9px] font-semibold px-1.5 py-0.2 rounded uppercase ${
+                    isAdmin 
+                      ? 'bg-emerald-500/20 text-emerald-300' 
+                      : 'bg-zinc-700/60 text-zinc-300'
+                  }`}>
+                    {isAdmin ? 'Admin • Total' : 'Normal'}
                   </span>
-                  <p className="text-[10px] text-emerald-400/90 font-mono truncate">{systemUser?.email || user.email}</p>
+                  <p className="text-[10px] text-[#81998d] font-mono truncate">{systemUser?.email || user.email}</p>
                 </div>
               </div>
             </button>
@@ -226,7 +236,9 @@ export default function Home() {
           </div>
           <div>
             <h1 className="font-bold text-sm leading-tight">Igreja do Nazareno</h1>
-            <p className="text-[10px] text-emerald-400">{systemUser?.name || 'Luciano Luís'}</p>
+            <p className="text-[10px] text-emerald-400">
+              {systemUser?.name || 'Luciano Luís'} • {isAdmin ? 'Admin' : 'Utilizador Normal'}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-1">
@@ -292,6 +304,17 @@ export default function Home() {
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden pt-16 md:pt-0 print:h-auto print:overflow-visible print:pt-0 print:block bg-[#f4f7f5]">
+        {!isAdmin && (
+          <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2 flex items-center justify-between text-xs text-amber-900 print:hidden shrink-0">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0"></span>
+              <span><strong>Perfil de Utilizador Normal:</strong> Acesso aos registos em modo de consulta. Apenas Administradores podem registar, editar ou eliminar dados.</span>
+            </div>
+            <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-800 shrink-0">
+              Sem Privilégios
+            </span>
+          </div>
+        )}
         <div className="flex-1 overflow-y-auto p-4 md:p-8 print:overflow-visible print:p-0 print:block">
           {renderContent()}
         </div>

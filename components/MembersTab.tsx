@@ -4,9 +4,11 @@ import React, { useEffect, useState } from 'react';
 import { collection, query, onSnapshot, addDoc, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Member } from '@/lib/types';
-import { Search, Plus, Trash2 } from 'lucide-react';
+import { Search, Plus, Trash2, Lock } from 'lucide-react';
+import { useAuth } from '@/lib/AuthContext';
 
 export default function MembersTab() {
+  const { isAdmin } = useAuth();
   const [members, setMembers] = useState<Member[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -56,6 +58,10 @@ export default function MembersTab() {
   };
 
   const handleDelete = async (id: string) => {
+    if (!isAdmin) {
+      alert('Apenas administradores têm privilégios para remover membros.');
+      return;
+    }
     if (confirm('Tem certeza que deseja remover este membro?')) {
       try {
         await deleteDoc(doc(db, 'members', id));
@@ -82,13 +88,20 @@ export default function MembersTab() {
           <p className="text-sm text-[#61776b] mt-0.5">Registo e acompanhamento dos membros da congregação</p>
         </div>
 
-        <button 
-          onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 bg-[#0e1613] hover:bg-[#1a2821] text-white px-4 py-2.5 rounded-xl transition-all font-semibold text-xs shadow-sm hover:shadow-emerald-950/20"
-        >
-          <Plus className="w-4 h-4 text-emerald-400" />
-          Novo Membro
-        </button>
+        {isAdmin ? (
+          <button 
+            onClick={() => setShowModal(true)}
+            className="flex items-center gap-2 bg-[#0e1613] hover:bg-[#1a2821] text-white px-4 py-2.5 rounded-xl transition-all font-semibold text-xs shadow-sm hover:shadow-emerald-950/20 cursor-pointer"
+          >
+            <Plus className="w-4 h-4 text-emerald-400" />
+            Novo Membro
+          </button>
+        ) : (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-100 border border-zinc-200 text-zinc-600 text-xs font-medium">
+            <Lock className="w-3.5 h-3.5 text-zinc-400" />
+            <span>Registo Restrito a Administradores</span>
+          </div>
+        )}
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-[#e2eae5] overflow-hidden">
@@ -151,13 +164,19 @@ export default function MembersTab() {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button 
-                        onClick={() => handleDelete(member.id)}
-                        className="text-[#9dafa5] hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition-colors"
-                        title="Remover Membro"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {isAdmin ? (
+                        <button 
+                          onClick={() => handleDelete(member.id)}
+                          className="text-[#9dafa5] hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition-colors cursor-pointer"
+                          title="Remover Membro"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      ) : (
+                        <span className="text-[11px] text-zinc-400 font-medium italic">
+                          Consulta
+                        </span>
+                      )}
                     </td>
                   </tr>
                 ))
