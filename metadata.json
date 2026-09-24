@@ -1,6 +1,6 @@
 {
   "name": "Gestão Igreja do Nazareno",
-  "description": "Sistema de gestão de crentes, finanças e visitas pastorais para a Igreja do Nazareno em Maputo, Moçambique.",
+  "description": "Sistema de gestão de crentes, finanças, visitas pastorais, registo de pastores, obreiros, músicos e escalas de culto para a Igreja do Nazareno em Maputo, Moçambique.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

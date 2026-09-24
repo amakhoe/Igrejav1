@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable @next/next/no-img-element */
 
 import React, { useState } from 'react';
 import { 
@@ -12,18 +13,24 @@ import {
   Sparkles,
   Search,
   ChevronDown,
-  LogOut
+  LogOut,
+  CalendarDays,
+  Users2,
+  UserCog
 } from 'lucide-react';
 import MembersTab from '@/components/MembersTab';
 import dynamic from 'next/dynamic';
 const FinancesTab = dynamic(() => import('@/components/FinancesTab'), { ssr: false });
 import VisitsTab from '@/components/VisitsTab';
 import DashboardTab from '@/components/DashboardTab';
+import WorkersTab from '@/components/WorkersTab';
+import SchedulesTab from '@/components/SchedulesTab';
+import ProfileTab from '@/components/ProfileTab';
 import LoginPage from '@/components/LoginPage';
 import { useAuth } from '@/lib/AuthContext';
 
 export default function Home() {
-  const { user, loading, logout } = useAuth();
+  const { user, systemUser, loading, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -45,23 +52,32 @@ export default function Home() {
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3, badge: null },
+    { id: 'schedules', label: 'Escala de Trabalho', icon: CalendarDays, badge: 'Cultos' },
+    { id: 'workers', label: 'Pastores & Servos', icon: Users2, badge: null },
     { id: 'members', label: 'Membros', icon: Users, badge: null },
-    { id: 'finances', label: 'Finanças', icon: Wallet, badge: 'Cultos' },
-    { id: 'visits', label: 'Visitas Pastorais', icon: Calendar, badge: 'Novo' },
+    { id: 'finances', label: 'Finanças', icon: Wallet, badge: null },
+    { id: 'visits', label: 'Visitas Pastorais', icon: Calendar, badge: null },
+    { id: 'profile', label: 'Editar Perfil', icon: UserCog, badge: 'Admin' },
   ];
 
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <DashboardTab />;
+        return <DashboardTab onNavigate={setActiveTab} />;
+      case 'schedules':
+        return <SchedulesTab />;
+      case 'workers':
+        return <WorkersTab />;
       case 'members':
         return <MembersTab />;
       case 'finances':
         return <FinancesTab />;
       case 'visits':
         return <VisitsTab />;
+      case 'profile':
+        return <ProfileTab key={systemUser?.id || systemUser?.email || 'profile'} onBackToDashboard={() => setActiveTab('dashboard')} />;
       default:
-        return <DashboardTab />;
+        return <DashboardTab onNavigate={setActiveTab} />;
     }
   };
 
@@ -159,23 +175,42 @@ export default function Home() {
 
         {/* User Account / Footer in Sidebar with Logout */}
         <div className="p-3.5 border-t border-[#182620] bg-[#0b120f]">
-          <div className="flex items-center justify-between p-2 rounded-xl bg-[#121c17] border border-[#1a2922]">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="relative">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white font-bold text-xs shadow-sm">
-                  IN
+          <div className="flex items-center justify-between p-2 rounded-xl bg-[#121c17] border border-[#1a2922] hover:border-emerald-500/30 transition-colors">
+            <button
+              onClick={() => setActiveTab('profile')}
+              title="Editar Perfil do Administrador"
+              className="flex items-center gap-2.5 min-w-0 text-left flex-1 cursor-pointer group"
+            >
+              <div className="relative shrink-0">
+                <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white font-bold text-xs shadow-sm border border-emerald-500/40">
+                  {systemUser?.photoURL ? (
+                    <img 
+                      src={systemUser.photoURL} 
+                      alt="Foto de Perfil" 
+                      className="w-full h-full object-cover" 
+                    />
+                  ) : (
+                    <span>{systemUser?.name?.substring(0, 2).toUpperCase() || 'LL'}</span>
+                  )}
                 </div>
                 <span className="w-2 h-2 rounded-full bg-emerald-400 border-2 border-[#0b120f] absolute bottom-0 right-0"></span>
               </div>
-              <div className="min-w-0 text-left">
-                <p className="text-xs font-bold text-white truncate leading-tight">Pastor Responsável</p>
-                <p className="text-[10px] text-emerald-400/90 font-mono truncate">{user.email}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold text-white truncate leading-tight group-hover:text-emerald-300 transition-colors">
+                  {systemUser?.name || 'Luciano Luís'}
+                </p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 uppercase">
+                    {systemUser?.role || 'Admin'}
+                  </span>
+                  <p className="text-[10px] text-emerald-400/90 font-mono truncate">{systemUser?.email || user.email}</p>
+                </div>
               </div>
-            </div>
+            </button>
             <button
               onClick={() => logout()}
               title="Terminar Sessão"
-              className="p-1.5 text-[#738a7e] hover:text-rose-400 hover:bg-rose-950/30 rounded-lg transition-colors cursor-pointer"
+              className="p-1.5 text-[#738a7e] hover:text-rose-400 hover:bg-rose-950/30 rounded-lg transition-colors cursor-pointer shrink-0 ml-1"
             >
               <LogOut className="w-4 h-4" />
             </button>
@@ -191,14 +226,21 @@ export default function Home() {
           </div>
           <div>
             <h1 className="font-bold text-sm leading-tight">Igreja do Nazareno</h1>
-            <p className="text-[10px] text-emerald-400">{user.email}</p>
+            <p className="text-[10px] text-emerald-400">{systemUser?.name || 'Luciano Luís'}</p>
           </div>
         </div>
         <div className="flex items-center gap-1">
           <button
+            onClick={() => setActiveTab('profile')}
+            title="Editar Perfil"
+            className="p-2 text-[#9bb0a5] hover:text-emerald-400 cursor-pointer"
+          >
+            <UserCog className="w-5 h-5" />
+          </button>
+          <button
             onClick={() => logout()}
             title="Terminar Sessão"
-            className="p-2 text-[#9bb0a5] hover:text-rose-400"
+            className="p-2 text-[#9bb0a5] hover:text-rose-400 cursor-pointer"
           >
             <LogOut className="w-5 h-5" />
           </button>

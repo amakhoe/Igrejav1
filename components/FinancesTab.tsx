@@ -5,6 +5,7 @@ import { collection, query, onSnapshot, addDoc, deleteDoc, doc } from 'firebase/
 import { db } from '@/lib/firebase';
 import { FinanceRecord, Member } from '@/lib/types';
 import { Plus, Trash2, FileDown, ChevronDown, ChevronUp, Printer } from 'lucide-react';
+import MonthlyFinanceChart from '@/components/MonthlyFinanceChart';
 
 
 
@@ -119,6 +120,43 @@ export default function FinancesTab() {
     setExpandedGroup(expandedGroup === key ? null : key);
   };
 
+  const [seeding, setSeeding] = useState(false);
+  const handleSeedSampleFinances = async () => {
+    setSeeding(true);
+    const nowTime = Date.now();
+    const currentYear = new Date().getFullYear();
+    const sampleData = [
+      { type: 'tithe' as const, amount: 14200, serviceDate: `${currentYear}-01-11`, serviceNumber: '1º Culto', createdAt: nowTime },
+      { type: 'offering' as const, amount: 5600, serviceDate: `${currentYear}-01-11`, serviceNumber: '1º Culto', createdAt: nowTime },
+      { type: 'tithe' as const, amount: 16800, serviceDate: `${currentYear}-02-08`, serviceNumber: '1º Culto', createdAt: nowTime },
+      { type: 'offering' as const, amount: 6900, serviceDate: `${currentYear}-02-08`, serviceNumber: '1º Culto', createdAt: nowTime },
+      { type: 'tithe' as const, amount: 19500, serviceDate: `${currentYear}-03-15`, serviceNumber: '1º Culto', createdAt: nowTime },
+      { type: 'offering' as const, amount: 7800, serviceDate: `${currentYear}-03-15`, serviceNumber: '1º Culto', createdAt: nowTime },
+      { type: 'tithe' as const, amount: 15300, serviceDate: `${currentYear}-04-12`, serviceNumber: '1º Culto', createdAt: nowTime },
+      { type: 'offering' as const, amount: 6200, serviceDate: `${currentYear}-04-12`, serviceNumber: '1º Culto', createdAt: nowTime },
+      { type: 'tithe' as const, amount: 18400, serviceDate: `${currentYear}-05-10`, serviceNumber: '1º Culto', createdAt: nowTime },
+      { type: 'offering' as const, amount: 7400, serviceDate: `${currentYear}-05-10`, serviceNumber: '1º Culto', createdAt: nowTime },
+      { type: 'tithe' as const, amount: 22800, serviceDate: `${currentYear}-06-14`, serviceNumber: '1º Culto', createdAt: nowTime },
+      { type: 'offering' as const, amount: 8900, serviceDate: `${currentYear}-06-14`, serviceNumber: '1º Culto', createdAt: nowTime },
+      { type: 'tithe' as const, amount: 20100, serviceDate: `${currentYear}-07-12`, serviceNumber: '1º Culto', createdAt: nowTime },
+      { type: 'offering' as const, amount: 7600, serviceDate: `${currentYear}-07-12`, serviceNumber: '1º Culto', createdAt: nowTime },
+      { type: 'tithe' as const, amount: 21500, serviceDate: `${currentYear}-08-09`, serviceNumber: '1º Culto', createdAt: nowTime },
+      { type: 'offering' as const, amount: 8200, serviceDate: `${currentYear}-08-09`, serviceNumber: '1º Culto', createdAt: nowTime },
+      { type: 'tithe' as const, amount: 23900, serviceDate: `${currentYear}-09-13`, serviceNumber: '1º Culto', createdAt: nowTime },
+      { type: 'offering' as const, amount: 9400, serviceDate: `${currentYear}-09-13`, serviceNumber: '1º Culto', createdAt: nowTime },
+    ];
+
+    try {
+      for (const item of sampleData) {
+        await addDoc(collection(db, 'finances'), item);
+      }
+    } catch (err) {
+      console.error('Erro ao adicionar dados de exemplo:', err);
+    } finally {
+      setSeeding(false);
+    }
+  };
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -132,7 +170,16 @@ export default function FinancesTab() {
           <p className="text-sm text-[#61776b] mt-0.5">Gestão e consolidação das contribuições da congregação</p>
         </div>
 
-        <div className="flex gap-2.5 print:hidden">
+        <div className="flex flex-wrap gap-2.5 print:hidden">
+          {finances.length === 0 && (
+            <button 
+              onClick={handleSeedSampleFinances}
+              disabled={seeding}
+              className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 px-3.5 py-2 rounded-xl hover:bg-emerald-100 transition-colors text-xs font-semibold shadow-xs disabled:opacity-50"
+            >
+              {seeding ? 'A carregar exemplos...' : 'Carregar Dados Exemplo'}
+            </button>
+          )}
           <button 
             onClick={() => window.print()}
             className="flex items-center gap-1.5 bg-white border border-[#dce6df] text-[#1b2a22] px-3.5 py-2 rounded-xl hover:bg-[#edf4ef] transition-colors text-xs font-semibold shadow-sm"
@@ -156,6 +203,9 @@ export default function FinancesTab() {
           </button>
         </div>
       </div>
+
+      {/* Componente de Visualização de Dados (Recharts) */}
+      <MonthlyFinanceChart finances={finances} />
 
       <div className="bg-white rounded-2xl shadow-sm border border-[#e2eae5] overflow-hidden">
         {groupedArray.length === 0 ? (

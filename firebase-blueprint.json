@@ -102,9 +102,157 @@
         }
       },
       "required": ["memberId", "visitDate", "status", "createdAt"]
+    },
+    "ChurchWorker": {
+      "title": "ChurchWorker",
+      "description": "Registo de pastores, obreiros e músicos da congregação",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Nome completo",
+          "maxLength": 150
+        },
+        "role": {
+          "type": "string",
+          "enum": ["pastor", "obreiro", "musico"],
+          "description": "Função principal: pastor, obreiro ou músico"
+        },
+        "subRole": {
+          "type": "string",
+          "description": "Especialidade ou cargo (ex: Pastor Titular, Diácono, Vocalista, Tecladista)",
+          "maxLength": 100
+        },
+        "phoneNumber": {
+          "type": "string",
+          "description": "Contacto telefónico / WhatsApp",
+          "maxLength": 30
+        },
+        "email": {
+          "type": "string",
+          "description": "Correio eletrónico",
+          "maxLength": 100
+        },
+        "active": {
+          "type": "boolean",
+          "description": "Se está ativo no ministério"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Observações sobre ministério ou escala",
+          "maxLength": 500
+        },
+        "createdAt": {
+          "type": "number",
+          "description": "Timestamp de registo"
+        }
+      },
+      "required": ["name", "role", "createdAt"]
+    },
+    "WorkSchedule": {
+      "title": "WorkSchedule",
+      "description": "Escala de trabalho e ministração para cultos",
+      "type": "object",
+      "properties": {
+        "date": {
+          "type": "string",
+          "description": "Data do culto ou domingo (YYYY-MM-DD)",
+          "maxLength": 30
+        },
+        "serviceName": {
+          "type": "string",
+          "description": "Nome ou período do culto (ex: Domingo - Culto Matutino)",
+          "maxLength": 100
+        },
+        "pastorIds": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "IDs dos pastores escalados para ministrar/cultuar"
+        },
+        "obreiroIds": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "IDs dos obreiros de serviço"
+        },
+        "musicianIds": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "IDs dos músicos e cantores escalados"
+        },
+        "musicGroup": {
+          "type": "string",
+          "description": "Grupo de louvor / coro responsável",
+          "maxLength": 100
+        },
+        "theme": {
+          "type": "string",
+          "description": "Tema da mensagem ou celebração",
+          "maxLength": 200
+        },
+        "notes": {
+          "type": "string",
+          "description": "Observações gerais da escala",
+          "maxLength": 1000
+        },
+        "createdAt": {
+          "type": "number",
+          "description": "Timestamp de criação"
+        }
+      },
+      "required": ["date", "serviceName", "createdAt"]
+    },
+    "SystemUser": {
+      "title": "SystemUser",
+      "description": "Utilizador autorizado para acesso ao sistema da igreja",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "Email de acesso",
+          "maxLength": 100
+        },
+        "name": {
+          "type": "string",
+          "description": "Nome do utilizador ou cargo",
+          "maxLength": 150
+        },
+        "role": {
+          "type": "string",
+          "enum": ["pastor", "secretario", "tesoureiro", "admin"],
+          "description": "Papel litúrgico / administrativo"
+        },
+        "active": {
+          "type": "boolean",
+          "description": "Indica se o acesso está ativo"
+        },
+        "phoneNumber": {
+          "type": "string",
+          "description": "Número de telefone do utilizador",
+          "maxLength": 30
+        },
+        "photoURL": {
+          "type": "string",
+          "description": "Foto de perfil ou avatar em Base64/URL",
+          "maxLength": 1000000
+        },
+        "password": {
+          "type": "string",
+          "description": "Palavra-passe de acesso registada",
+          "maxLength": 100
+        },
+        "createdAt": {
+          "type": "number",
+          "description": "Timestamp de criação"
+        }
+      },
+      "required": ["email", "name", "role", "active", "createdAt"]
     }
   },
   "firestore": {
+    "/system_users/{userId}": {
+      "schema": "SystemUser",
+      "description": "Coleção de utilizadores autorizados da base de dados"
+    },
     "/members/{memberId}": {
       "schema": "Member",
       "description": "Coleção de membros registados"
@@ -116,6 +264,14 @@
     "/visits/{visitId}": {
       "schema": "Visit",
       "description": "Coleção de visitas pastorais agendadas"
+    },
+    "/workers/{workerId}": {
+      "schema": "ChurchWorker",
+      "description": "Coleção de pastores, obreiros e músicos"
+    },
+    "/schedules/{scheduleId}": {
+      "schema": "WorkSchedule",
+      "description": "Coleção de escalas de trabalho e culto"
     }
   }
 }
