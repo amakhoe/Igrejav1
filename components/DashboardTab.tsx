@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { collection, query, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Member, FinanceRecord, Visit, WorkSchedule, ChurchWorker } from '@/lib/types';
+import { Member, FinanceRecord, Visit, WorkSchedule, ChurchWorker, ChurchCell } from '@/lib/types';
 import { 
   Users, 
   TrendingUp, 
@@ -16,8 +16,12 @@ import {
   CalendarDays,
   ShieldCheck,
   Users2,
-  Music
+  Music,
+  UserPlus,
+  Home as HomeIcon,
+  MapPin
 } from 'lucide-react';
+import { useAuth } from '@/lib/AuthContext';
 import {
   BarChart,
   Bar,
@@ -31,11 +35,13 @@ import {
 } from 'recharts';
 
 export default function DashboardTab({ onNavigate }: { onNavigate?: (tab: string) => void }) {
+  const { isAdmin } = useAuth();
   const [members, setMembers] = useState<Member[]>([]);
   const [finances, setFinances] = useState<FinanceRecord[]>([]);
   const [visits, setVisits] = useState<Visit[]>([]);
   const [schedules, setSchedules] = useState<WorkSchedule[]>([]);
   const [workers, setWorkers] = useState<ChurchWorker[]>([]);
+  const [cells, setCells] = useState<ChurchCell[]>([]);
 
   useEffect(() => {
     const qMembers = query(collection(db, 'members'));
@@ -91,12 +97,22 @@ export default function DashboardTab({ onNavigate }: { onNavigate?: (tab: string
       (err) => console.warn('Erro ao carregar servos no dashboard:', err)
     );
 
+    const qCells = query(collection(db, 'cells'));
+    const unsubsCells = onSnapshot(
+      qCells,
+      (snapshot) => {
+        setCells(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ChurchCell)));
+      },
+      (err) => console.warn('Erro ao carregar células no dashboard:', err)
+    );
+
     return () => {
       unsubsMembers();
       unsubsFinances();
       unsubsVisits();
       unsubsSchedules();
       unsubsWorkers();
+      unsubsCells();
     };
   }, []);
 
@@ -113,6 +129,11 @@ export default function DashboardTab({ onNavigate }: { onNavigate?: (tab: string
   }).length;
 
   const totalFinances = finances.reduce((sum, f) => sum + Number(f.amount || 0), 0);
+
+  const totalCells = cells.length;
+  const activeCells = cells.filter(c => c.active).length;
+  const totalCellMembers = cells.reduce((sum, c) => sum + (Number(c.membersCount) || 0), 0);
+  const cellNeighborhoods = Array.from(new Set(cells.map(c => c.neighborhood).filter(Boolean)));
 
   // Growth Data
   const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
@@ -153,7 +174,16 @@ export default function DashboardTab({ onNavigate }: { onNavigate?: (tab: string
           </div>
           <p className="text-sm text-[#61776b] mt-0.5">Visão unificada de membros, finanças e visitas da Igreja do Nazareno</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
+          {isAdmin && onNavigate && (
+            <button 
+              onClick={() => onNavigate('users')}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white transition-all text-xs font-bold shadow-sm shadow-emerald-950/20 cursor-pointer"
+            >
+              <UserPlus className="w-3.5 h-3.5" />
+              + Criar Utilizador
+            </button>
+          )}
           <button 
             onClick={() => window.print()}
             className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-[#dce6df] text-[#1b2a22] hover:bg-[#edf4ef] transition-colors text-xs font-semibold shadow-sm cursor-pointer"
@@ -286,6 +316,44 @@ export default function DashboardTab({ onNavigate }: { onNavigate?: (tab: string
               {finances.length} registos
             </span>
           </div>
+        </div>
+      </div>
+
+      {/* Células da Igreja & Comunhão nos Lares Banner */}
+      <div className="bg-white rounded-2xl border border-[#e2eae5] p-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center shrink-0">
+            <HomeIcon className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-base font-bold text-[#0e1613]">Células &amp; Comunhão nos Lares</h3>
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                {activeCells} Ativas em Maputo
+              </span>
+            </div>
+            <p className="text-xs text-[#61776b] mt-0.5">
+              {totalCells > 0 ? (
+                <>
+                  <strong className="text-gray-900 font-semibold">{totalCellMembers}</strong> participantes integrados em <strong className="text-gray-900 font-semibold">{totalCells}</strong> células por {cellNeighborhoods.length} bairros ({cellNeighborhoods.slice(0, 3).join(', ')}{cellNeighborhoods.length > 3 ? '...' : ''}).
+                </>
+              ) : (
+                'Nenhuma célula cadastrada ainda. Configure os pequenos grupos da congregação nos bairros.'
+              )}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          {onNavigate && (
+            <button
+              onClick={() => onNavigate('cells')}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-sm shadow-emerald-700/20"
+            >
+              <span>Gerir Células</span>
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
 

@@ -246,6 +246,85 @@
         }
       },
       "required": ["email", "name", "role", "active", "createdAt"]
+    },
+    "ChurchCell": {
+      "title": "ChurchCell",
+      "description": "Célula ou grupo de comunhão e oração da Igreja do Nazareno",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Nome da célula (ex: Célula Betel)",
+          "maxLength": 100
+        },
+        "leaderName": {
+          "type": "string",
+          "description": "Nome do líder da célula",
+          "maxLength": 150
+        },
+        "leaderPhone": {
+          "type": "string",
+          "description": "Telefone / WhatsApp de contacto do líder",
+          "maxLength": 30
+        },
+        "viceLeaderName": {
+          "type": "string",
+          "description": "Co-líder ou auxiliar da célula",
+          "maxLength": 150
+        },
+        "hostName": {
+          "type": "string",
+          "description": "Anfitrião da casa onde a célula se reúne",
+          "maxLength": 150
+        },
+        "neighborhood": {
+          "type": "string",
+          "description": "Bairro onde a célula se realiza (ex: Malhangalene)",
+          "maxLength": 100
+        },
+        "address": {
+          "type": "string",
+          "description": "Endereço ou ponto de referência",
+          "maxLength": 250
+        },
+        "meetingDay": {
+          "type": "string",
+          "description": "Dia da semana da reunião",
+          "maxLength": 30
+        },
+        "meetingTime": {
+          "type": "string",
+          "description": "Horário da reunião (ex: 18:30)",
+          "maxLength": 20
+        },
+        "membersCount": {
+          "type": "number",
+          "description": "Número de pessoas frequentes na célula"
+        },
+        "targetAudience": {
+          "type": "string",
+          "enum": ["Geral", "Jovens", "Mulheres", "Homens", "Casais", "Famílias", "Crianças"],
+          "description": "Rede ou público-alvo"
+        },
+        "active": {
+          "type": "boolean",
+          "description": "Indica se a célula está ativa"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Observações, pedidos de oração ou metas",
+          "maxLength": 1000
+        },
+        "createdAt": {
+          "type": "number",
+          "description": "Timestamp de criação"
+        },
+        "updatedAt": {
+          "type": "number",
+          "description": "Timestamp de atualização"
+        }
+      },
+      "required": ["name", "leaderName", "neighborhood", "meetingDay", "meetingTime", "active", "createdAt"]
     }
   },
   "firestore": {
@@ -272,6 +351,11 @@
     "/schedules/{scheduleId}": {
       "schema": "WorkSchedule",
       "description": "Coleção de escalas de trabalho e culto"
+    },
+    "/cells/{cellId}": {
+      "schema": "ChurchCell",
+      "description": "Coleção de células e pequenos grupos da igreja"
     }
   }
 }
+

@@ -53,8 +53,8 @@ export default function UsersManagementTab({ onNavigate }: UsersManagementTabPro
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<'all' | 'admin' | 'usuario'>('all');
 
-  // Form states for creating a new user
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  // Form states for creating a new user (open by default for quick access)
+  const [isFormOpen, setIsFormOpen] = useState(true);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -421,37 +421,55 @@ export default function UsersManagementTab({ onNavigate }: UsersManagementTabPro
 
             {/* Linha 3: ESCOLHA DE PRIVILÉGIOS (ADMIN vs USUÁRIO NORMAL) */}
             <div>
-              <label className="block text-xs font-bold text-[#203127] mb-2">
-                Nível de Privilégio &amp; Tipo de Utilizador <span className="text-rose-500">*</span>
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs font-bold text-[#203127]">
+                  Escolha o Nível de Acesso do Utilizador <span className="text-rose-500">*</span>
+                </label>
+                <span className="text-[11px] text-[#61776b]">
+                  {role === 'admin' ? '👑 Acesso Total Selecionado' : '👤 Modo Apenas Consulta Selecionado'}
+                </span>
+              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 
-                {/* Opção 1: Utilizador Normal (Sem privilégios) */}
+                {/* Opção 1: Utilizador Normal (Sem nenhum privilégio) */}
                 <div 
                   onClick={() => setRole('usuario')}
                   className={`p-4 rounded-2xl border-2 transition-all cursor-pointer relative ${
                     role === 'usuario'
-                      ? 'border-emerald-600 bg-emerald-50/40 shadow-xs'
+                      ? 'border-zinc-500 bg-zinc-50/90 shadow-sm ring-1 ring-zinc-400'
                       : 'border-[#dce6df] hover:border-[#b8cfc0] bg-white'
                   }`}
                 >
                   <div className="flex items-start gap-3">
-                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
-                      role === 'usuario' ? 'bg-emerald-600 text-white' : 'bg-[#eef3f0] text-[#556e60]'
-                    }`}>
-                      <User className="w-4 h-4" />
+                    <div className="mt-0.5 shrink-0">
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                        role === 'usuario' ? 'border-zinc-700 bg-zinc-700' : 'border-zinc-400 bg-white'
+                      }`}>
+                        {role === 'usuario' && <div className="w-2 h-2 rounded-full bg-white" />}
+                      </div>
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <span className="font-bold text-xs text-[#0e1613]">Utilizador Normal</span>
                         <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-zinc-200 text-zinc-700">
-                          Sem Privilégios
+                          Sem Nenhum Privilégio
                         </span>
                       </div>
                       <p className="text-[11px] text-[#576e62] mt-1 leading-relaxed">
-                        Acesso estritamente de consulta/visualização. Não pode criar ou excluir utilizadores, nem alterar registos financeiros ou configurações da igreja.
+                        Acesso estritamente de consulta/visualização. Não tem privilégios administrativos.
                       </p>
+                      <ul className="mt-2 space-y-1 text-[10px] text-zinc-600 border-t border-zinc-200/60 pt-2">
+                        <li className="flex items-center gap-1.5">
+                          <span className="text-zinc-400">✕</span> Não pode criar ou eliminar utilizadores
+                        </li>
+                        <li className="flex items-center gap-1.5">
+                          <span className="text-zinc-400">✕</span> Não pode registar membros ou dízimos/ofertas
+                        </li>
+                        <li className="flex items-center gap-1.5">
+                          <span className="text-emerald-600">✓</span> Pode visualizar relatórios e escalas em modo leitura
+                        </li>
+                      </ul>
                     </div>
                   </div>
                 </div>
@@ -461,15 +479,17 @@ export default function UsersManagementTab({ onNavigate }: UsersManagementTabPro
                   onClick={() => setRole('admin')}
                   className={`p-4 rounded-2xl border-2 transition-all cursor-pointer relative ${
                     role === 'admin'
-                      ? 'border-emerald-600 bg-emerald-50/40 shadow-xs'
+                      ? 'border-emerald-600 bg-emerald-50/60 shadow-sm ring-1 ring-emerald-500'
                       : 'border-[#dce6df] hover:border-[#b8cfc0] bg-white'
                   }`}
                 >
                   <div className="flex items-start gap-3">
-                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
-                      role === 'admin' ? 'bg-emerald-600 text-white' : 'bg-[#eef3f0] text-[#556e60]'
-                    }`}>
-                      <ShieldCheck className="w-4 h-4" />
+                    <div className="mt-0.5 shrink-0">
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                        role === 'admin' ? 'border-emerald-600 bg-emerald-600' : 'border-zinc-400 bg-white'
+                      }`}>
+                        {role === 'admin' && <div className="w-2 h-2 rounded-full bg-white" />}
+                      </div>
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
@@ -479,8 +499,19 @@ export default function UsersManagementTab({ onNavigate }: UsersManagementTabPro
                         </span>
                       </div>
                       <p className="text-[11px] text-[#576e62] mt-1 leading-relaxed">
-                        Pode criar e gerir utilizadores, conceder privilégios, gerir finanças (ofertas/dízimos), registar/eliminar membros e cultos.
+                        Acesso total para gestão de utilizadores, membros, finanças e ministério.
                       </p>
+                      <ul className="mt-2 space-y-1 text-[10px] text-emerald-800 border-t border-emerald-200/60 pt-2">
+                        <li className="flex items-center gap-1.5">
+                          <span className="text-emerald-600">✓</span> Criar novos utilizadores (Admin ou Normal)
+                        </li>
+                        <li className="flex items-center gap-1.5">
+                          <span className="text-emerald-600">✓</span> Registar e gerir finanças, membros e cultos
+                        </li>
+                        <li className="flex items-center gap-1.5">
+                          <span className="text-emerald-600">✓</span> Alterar privilégios e redefinir palavras-passe
+                        </li>
+                      </ul>
                     </div>
                   </div>
                 </div>

@@ -66,3 +66,25 @@ export interface SystemUser {
   createdAt: number;
   lastLoginAt?: number;
 }
+
+export type CellTargetAudience = 'Geral' | 'Jovens' | 'Mulheres' | 'Homens' | 'Casais' | 'Famílias' | 'Crianças';
+
+export interface ChurchCell {
+  id: string;
+  name: string; // ex: "Célula Betel"
+  leaderName: string; // Nome do líder
+  leaderPhone?: string; // Telefone ou WhatsApp
+  viceLeaderName?: string; // Co-líder ou auxiliar
+  hostName?: string; // Nome do anfitrião da casa
+  neighborhood: string; // Bairro (ex: Malhangalene, Maxaquene, Alto Maé)
+  address?: string; // Endereço / Ponto de referência
+  meetingDay: string; // ex: 'Quarta-feira'
+  meetingTime: string; // ex: '18:30'
+  membersCount: number; // Quantidade de frequentadores
+  targetAudience: CellTargetAudience;
+  active: boolean;
+  notes?: string; // Metas, pedidos de oração
+  createdAt: number;
+  updatedAt?: number;
+}
+

@@ -4,16 +4,16 @@ import { AuthProvider } from '@/lib/AuthContext';
 
 export const metadata: Metadata = {
   title: 'Igreja do Nazareno',
-  description: 'Sistema de gestão de crentes, finanças e visitas pastorais para a Igreja do Nazareno em Maputo.',
+  description: 'Sistema de gestão de crentes, células e comunhão nos lares, finanças e visitas pastorais para a Igreja do Nazareno em Maputo.',
   openGraph: {
     title: 'Gestão Igreja do Nazareno',
-    description: 'Sistema de gestão de crentes, finanças e visitas pastorais para a Igreja do Nazareno em Maputo.',
+    description: 'Sistema de gestão de crentes, células e comunhão nos lares, finanças e visitas pastorais para a Igreja do Nazareno em Maputo.',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Gestão Igreja do Nazareno',
-    description: 'Sistema de gestão de crentes, finanças e visitas pastorais para a Igreja do Nazareno em Maputo.',
+    description: 'Sistema de gestão de crentes, células e comunhão nos lares, finanças e visitas pastorais para a Igreja do Nazareno em Maputo.',
   },
 };
 

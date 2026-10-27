@@ -27,6 +27,7 @@ import VisitsTab from '@/components/VisitsTab';
 import DashboardTab from '@/components/DashboardTab';
 import WorkersTab from '@/components/WorkersTab';
 import SchedulesTab from '@/components/SchedulesTab';
+import CellsTab from '@/components/CellsTab';
 import ProfileTab from '@/components/ProfileTab';
 import UsersManagementTab from '@/components/UsersManagementTab';
 import LoginPage from '@/components/LoginPage';
@@ -55,6 +56,7 @@ export default function Home() {
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3, badge: null },
+    { id: 'cells', label: 'Células da Igreja', icon: Church, badge: 'Comunhão' },
     { id: 'schedules', label: 'Escala de Trabalho', icon: CalendarDays, badge: 'Cultos' },
     { id: 'workers', label: 'Pastores & Servos', icon: Users2, badge: null },
     { id: 'members', label: 'Membros', icon: Users, badge: null },
@@ -68,6 +70,8 @@ export default function Home() {
     switch (activeTab) {
       case 'dashboard':
         return <DashboardTab onNavigate={setActiveTab} />;
+      case 'cells':
+        return <CellsTab />;
       case 'schedules':
         return <SchedulesTab />;
       case 'workers':
