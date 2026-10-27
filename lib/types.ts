@@ -5,6 +5,10 @@ export interface Member {
   phoneNumber: string;
   isBaptized: boolean;
   isTransferred: boolean;
+  address?: string;
+  neighborhood?: string;
+  email?: string;
+  cellGroup?: string;
   createdAt: number;
 }
 
@@ -22,6 +26,10 @@ export interface Visit {
   id: string;
   memberId: string;
   visitDate: string; // YYYY-MM-DD
+  visitTime?: string; // e.g. "15:00"
+  visitorName?: string; // Pastor ou obreiro que realizará a visita
+  purpose?: string; // Motivo da visita (ex: Oração, Aconselhamento, Enfermidade)
+  address?: string; // Endereço / Bairro onde será a visita
   status: 'scheduled' | 'completed';
   notes: string;
   createdAt: number;
